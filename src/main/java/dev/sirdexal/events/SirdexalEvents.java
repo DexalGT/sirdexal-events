@@ -240,6 +240,36 @@ public class SirdexalEvents implements ModInitializer {
                             .executes(ctx -> setConfig(ctx, "SFX", "OFF", () -> LAVA_CONFIG.sfx = false))))
                 )
             )
+
+            // /events world reset
+            .then(CommandManager.literal("world")
+                .requires(SirdexalEvents::isOp)
+                .then(CommandManager.literal("reset")
+                    .executes(ctx -> {
+                        if (resetCountdown > 0) {
+                            ctx.getSource().sendError(Text.literal("[Events] A reset is already counting down (" + resetCountdown + "s left). Use /events world reset cancel to stop it."));
+                            return 0;
+                        }
+                        resetCountdown = 10;
+                        ticksSinceLastSecond = 0;
+                        EventsLog.warn("RESET countdown STARTED ({}s).", resetCountdown);
+                        ctx.getSource().getServer().getPlayerManager().broadcast(Text.literal("[Events] World reset in 10s — /events world reset cancel to stop.").formatted(Formatting.RED), false);
+                        return 1;
+                    })
+                    .then(CommandManager.literal("cancel")
+                        .executes(ctx -> {
+                            if (resetCountdown <= 0) {
+                                ctx.getSource().sendError(Text.literal("[Events] No world reset is in progress."));
+                                return 0;
+                            }
+                            EventsLog.info("RESET countdown CANCELLED (was at {}s).", resetCountdown);
+                            resetCountdown = -1;
+                            ctx.getSource().getServer().getPlayerManager().broadcast(Text.literal("[Events] World reset cancelled.").formatted(Formatting.GREEN), false);
+                            return 1;
+                        })
+                    )
+                )
+            )
         );
     }
 
