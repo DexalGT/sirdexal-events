@@ -37,7 +37,18 @@ public class SirdexalEvents implements ModInitializer {
     // ── World Reset ──
     private static int resetCountdown = -1;
     private static int ticksSinceLastSecond = 0;
-    public static final String SERVER_UUID = "06c9e470-9f4f-4e01-b7e1-fa70b7265b4b";
+    public static final String RESET_TOKEN = loadResetToken();
+
+    private static String loadResetToken() {
+        java.nio.file.Path tokenFile = net.fabricmc.loader.api.FabricLoader.getInstance().getGameDir().resolve("events-reset-token.txt");
+        try {
+            if (java.nio.file.Files.exists(tokenFile)) {
+                String token = java.nio.file.Files.readString(tokenFile).strip();
+                if (!token.isEmpty()) return token;
+            }
+        } catch (java.io.IOException e) {}
+        return "events_sirdexal_reset_token_xyz";
+    }
 
     @Override
     public void onInitialize() {
@@ -103,7 +114,7 @@ public class SirdexalEvents implements ModInitializer {
                         server.getPlayerManager().broadcast(Text.literal("RESETTING").formatted(Formatting.DARK_RED, Formatting.BOLD), false);
                         server.getPlayerManager().broadcast(Text.literal("[Events] World reset incoming — server will restart shortly!").formatted(Formatting.RED, Formatting.BOLD), false);
                         EventsLog.info("World-reset countdown finished — emitting trigger token for the watcher.");
-                        EventsLog.slf4j().info("[EVENTS-RESET] SERVER:{}", SERVER_UUID);
+                        EventsLog.slf4j().info("[EVENTS-RESET] TOKEN:{}", RESET_TOKEN);
                     } else {
                         server.getPlayerManager().broadcast(Text.literal("[Events] World reset in " + resetCountdown + "s — /events world reset cancel to stop.").formatted(Formatting.RED), false);
                     }
